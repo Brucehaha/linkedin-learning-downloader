@@ -2,7 +2,7 @@
 
 # Linkedin Learning Downloader
 [![built with Requests](https://img.shields.io/badge/built%20with-Requests-yellow.svg?style=flat-square)](http://docs.python-requests.org)
-[![built with Python2.7](https://img.shields.io/badge/built%20with-Python2.7-red.svg?style=flat-square)](https://www.python.org/)
+[![built with Python3](https://img.shields.io/badge/built%20with-Python3-red.svg?style=flat-square)](https://www.python.org/)
 ## updated by brucehaha on 14/06/2018
 ### A scraping tool that downloads video lessons from Linkedin Learning
 Features:
