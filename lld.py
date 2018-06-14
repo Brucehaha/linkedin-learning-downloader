@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 import requests
 from requests import Session
 from bs4 import BeautifulSoup
@@ -9,9 +9,10 @@ import os
 import string
 import config
 import logging
+from importlib import reload
 
 reload(sys)
-sys.setdefaultencoding('utf-8')
+
 
 login_url = 'https://www.linkedin.com/'
 post_login_url = 'https://www.linkedin.com/uas/login-submit'
@@ -39,7 +40,7 @@ class Lld:
     @staticmethod
     def plain_cookies(cookies):
         plain = ''
-        for k, v in cookies.iteritems():
+        for k, v in cookies.items():
             plain += k + '=' + v + '; '
         return plain[:-2]
 
@@ -47,12 +48,12 @@ class Lld:
     def format_string(raw_string):
         replacement_dict = {u'Ä': 'Ae', u'Ö': 'Oe', u'Ü': 'Ue', u'ä': 'ae', u'ö': 'oe', u'ü': 'ue', ':': ' -'}
         invalid_chars = r'[^A-Za-z0-9\-\.]+'
-        u_map = {ord(key): unicode(val) for key, val in replacement_dict.items()}
+        u_map = {ord(key): str(val) for key, val in replacement_dict.items()}
         raw_string = raw_string.translate(u_map)
         raw_string = re.sub(invalid_chars, ' ', raw_string).strip().encode('utf-8')
         i = 0
         for c in raw_string:
-            if c in string.ascii_letters:
+            if str(c) in string.ascii_letters:
                 break
             i += 1
         return raw_string[i:]
@@ -103,7 +104,8 @@ class Lld:
         login_page = BeautifulSoup(self.session.get(login_url).text, 'html.parser')
         csrf = login_page.find(id='loginCsrfParam-login')['value']
         logging.info('Csfr token: %s' % csrf)
-        login_data = urllib.urlencode(
+		#  urllib.parse.urlencode in python 3
+        login_data = urllib.parse.urlencode(
             {'session_key': config.USERNAME, 'session_password': config.PASSWORD, 'isJsEnabled': 'false',
              'loginCsrfParam': csrf})
         headers['Cookie'] = self.plain_cookies(requests.utils.dict_from_cookiejar(self.session.cookies))
@@ -123,7 +125,9 @@ class Lld:
         for course in config.COURSES:
             resp = self.session.get(course_api_url % course)
             course_data = resp.json()['elements'][0]
-            course_name = self.format_string(course_data['title'])
+            course_name = str(course_data['title'])
+			#get rid of the special character for windows to create folder or file name 
+            course_name = re.sub('[:\"?<>\*|\\/]', '', course_name)
             logging.info('Starting download of course [%s]...' % course_name)
             course_path = '%s/%s' % (self.base_path, course_name)
             chapters_list = course_data['chapters']
@@ -131,7 +135,8 @@ class Lld:
             logging.info('Parsing course\'s chapters...')
             logging.info('%d chapters found' % len(chapters_list))
             for chapter in chapters_list:
-                chapter_name = self.format_string(chapter['title'])
+                chapter_name = str(chapter['title'])
+                chapter_name = re.sub('[:\"?<>\*|\\/]', '', chapter_name)
                 logging.info('Starting download of chapter [%s]...' % chapter_name)
                 chapter_path = '%s/%s - %s' % (course_path, str(chapter_index).zfill(2), chapter_name)
                 if chapter_name == '':
@@ -141,7 +146,9 @@ class Lld:
                 logging.info('Parsing chapters\'s videos')
                 logging.info('%d videos found' % len(videos_list))
                 for video in videos_list:
-                    video_name = self.format_string(video['title'])
+                    video_name = str(video['title'])
+                    video_name = re.sub('[:\"?<>\*|\\/]', '', video_name)
+                    print("haha: {}".format(video_name))
                     video_slug = video['slug']
                     video_data = (self.session.get(video_api_url % (course, video_slug)))
                     try:
