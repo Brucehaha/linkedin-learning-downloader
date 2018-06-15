@@ -1,4 +1,3 @@
-
 import requests
 from requests import Session
 from bs4 import BeautifulSoup
@@ -124,9 +123,15 @@ class Lld:
 
         for course in config.COURSES:
             resp = self.session.get(course_api_url % course)
+            try:
+                course_data = resp.json()['elements'][0]
+            except KeyError:
+                print("skipping.............{}".format(course))
+                continue
+                #get rid of the special character for windows to create folder or file name
+            course_data = resp.json()['elements'][0]
             course_data = resp.json()['elements'][0]
             course_name = str(course_data['title'])
-			#get rid of the special character for windows to create folder or file name 
             course_name = re.sub('[:\"?<>\*|\\/]', '', course_name)
             logging.info('Starting download of course [%s]...' % course_name)
             course_path = '%s/%s' % (self.base_path, course_name)
